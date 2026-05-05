@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Mis Rutinas — Gustavo Tocci</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; min-height: 100vh; color: #1e293b; }
+
+.screen { display: none; max-width: 480px; margin: 0 auto; padding-bottom: 40px; }
+.screen.active { display: block; }
+
+/* Header */
+.hdr { padding: 24px 20px 20px; margin-bottom: 16px; }
+.hdr-dark { background: linear-gradient(135deg, #1e1b4b, #312e81); }
+.hdr-row { display: flex; align-items: center; gap: 12px; }
+.hdr h1 { font-size: 22px; font-weight: 600; color: white; margin-bottom: 4px; }
+.hdr p { font-size: 13px; color: rgba(255,255,255,0.6); }
+.btn-ghost { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; padding: 8px 14px; color: white; font-size: 13px; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+
+/* Cards rutina home */
+.routine-card { background: white; border: 0.5px solid #e2e8f0; border-radius: 16px; padding: 16px; margin: 0 16px 12px; cursor: pointer; position: relative; overflow: hidden; transition: transform 0.15s; }
+.routine-card:active { transform: scale(0.98); }
+.routine-accent { position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: 16px 0 0 16px; }
+.routine-inner { display: flex; align-items: center; gap: 14px; padding-left: 8px; }
+.routine-badge { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: 600; flex-shrink: 0; }
+.routine-info { flex: 1; }
+.routine-name { font-weight: 600; font-size: 15px; color: #1e293b; margin-bottom: 3px; }
+.routine-meta { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 6px; }
+.tag-last { font-size: 11px; padding: 2px 8px; border-radius: 50px; font-weight: 600; }
+.routine-arrow { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+/* Progress bar */
+.progress-wrap { margin-top: 14px; }
+.progress-bar { background: rgba(255,255,255,0.25); border-radius: 50px; height: 6px; overflow: hidden; }
+.progress-fill { background: white; height: 100%; border-radius: 50px; transition: width 0.4s; }
+.progress-label { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 6px; }
+
+/* Bloque separator */
+.bloque-sep { display: flex; align-items: center; gap: 10px; margin: 0 16px 10px; }
+.bloque-tag { font-size: 12px; font-weight: 600; padding: 4px 14px; border-radius: 50px; flex-shrink: 0; }
+.bloque-line { flex: 1; height: 1px; background: #e2e8f0; }
+
+/* Exercise accordion */
+.ex-card { background: white; border-radius: 14px; margin: 0 16px 8px; overflow: hidden; transition: border 0.2s; }
+.ex-card.done { border: 1.5px solid var(--accent); }
+.ex-card.pending { border: 0.5px solid #e2e8f0; }
+.ex-row { display: flex; align-items: center; gap: 10px; padding: 13px 16px; cursor: pointer; }
+.ex-check { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; transition: background 0.2s; }
+.ex-check.done { color: white; }
+.ex-check.pending { background: #f1f5f9; color: #94a3b8; }
+.ex-info { flex: 1; }
+.ex-name { font-size: 14px; font-weight: 600; color: #1e293b; }
+.ex-sug { font-size: 12px; color: #64748b; margin-top: 2px; }
+.ex-prev { font-weight: 600; }
+.ex-chevron { color: #94a3b8; font-size: 16px; transition: transform 0.2s; }
+.ex-chevron.open { transform: rotate(90deg); }
+
+/* Sets input */
+.ex-body { border-top: 0.5px solid #f1f5f9; padding: 12px 16px 14px; }
+.sets-header { display: grid; grid-template-columns: 28px 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.sets-header span { font-size: 11px; color: #94a3b8; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+.set-row { display: grid; grid-template-columns: 28px 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.set-num { width: 28px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+.set-input { border: 0.5px solid #e2e8f0; border-radius: 8px; padding: 8px 4px; font-size: 16px; color: #1e293b; font-family: inherit; text-align: center; background: #f8fafc; width: 100%; outline: none; }
+.set-input:focus { border-color: var(--accent); background: white; }
+.btn-add-set { width: 100%; padding: 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 4px; }
+
+/* Finish button */
+.btn-finish { display: block; width: calc(100% - 32px); margin: 16px 16px 0; padding: 16px; border: none; border-radius: 14px; color: white; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+/* History */
+.hist-card { background: white; border: 0.5px solid #e2e8f0; border-radius: 16px; margin: 0 16px 12px; overflow: hidden; }
+.hist-hdr { padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+.hist-hdr-info h3 { font-size: 15px; font-weight: 600; color: white; }
+.hist-hdr-info p { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+.hist-count { background: rgba(255,255,255,0.2); border-radius: 10px; padding: 6px 12px; color: white; font-size: 12px; font-weight: 600; }
+.hist-body { padding: 12px 16px; }
+.hist-ex { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 0.5px solid #f1f5f9; }
+.hist-ex:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.hist-ex-name { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 6px; }
+.hist-sets { display: flex; flex-wrap: wrap; gap: 6px; }
+.hist-set-tag { border-radius: 8px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+
+.empty { background: white; border: 0.5px solid #e2e8f0; border-radius: 14px; margin: 0 16px; padding: 24px; text-align: center; color: #94a3b8; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="screen-home" class="screen active">
+  <div class="hdr hdr-dark">
+    <div class="hdr-row">
+      <div style="flex:1">
+        <h1>Mis rutinas</h1>
+        <p id="home-subtitle">Elegí tu rutina de hoy</p>
+      </div>
+      <button class="btn-ghost" onclick="showScreen('history')">Historial</button>
+    </div>
+  </div>
+  <div id="routine-list"></div>
+</div>
+
+<!-- TRAIN -->
+<div id="screen-train" class="screen">
+  <div class="hdr" id="train-hdr">
+    <div class="hdr-row" style="margin-bottom:14px;">
+      <button class="btn-ghost" onclick="showScreen('home')">← Salir</button>
+      <div>
+        <h1 id="train-title" style="font-size:17px;"></h1>
+        <p id="train-date"></p>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-label" id="progress-label">0 de 0 ejercicios completados</div>
+    </div>
+  </div>
+  <div id="exercise-list"></div>
+  <button class="btn-finish" id="btn-finish" onclick="finishSession()">Finalizar entrenamiento</button>
+</div>
+
+<!-- HISTORY -->
+<div id="screen-history" class="screen">
+  <div class="hdr hdr-dark">
+    <div class="hdr-row">
+      <button class="btn-ghost" onclick="showScreen('home')">←</button>
+      <h1>Historial</h1>
+    </div>
+  </div>
+  <div id="history-list"></div>
+</div>
+
+<script>
+const ROUTINES_KEY = "gym_routines_v3";
+const SESSION_KEY  = "gym_sessions_v2";
+
+const ROUTINES = [
+  {
+    id:"A", name:"Día 1 — Fuerza",
+    exercises:[
+      {id:"a1",  name:"Movilidad articular general",       bloque:"CORE",   seriesSug:1, repsSug:"5'"},
+      {id:"a2",  name:"Puente alto rotación",               bloque:"CORE",   seriesSug:3, repsSug:"12"},
+      {id:"a3",  name:"Abs plegado + press 1 brazo",        bloque:"CORE",   seriesSug:3, repsSug:"6 c/lado"},
+      {id:"a4",  name:"Lumbar nado",                        bloque:"CORE",   seriesSug:3, repsSug:"12"},
+      {id:"a5",  name:"Step down (estocadas hacia atrás)",  bloque:"FUERZA", seriesSug:3, repsSug:"8 c/lado"},
+      {id:"a6",  name:"Polea pecho toma abierta",           bloque:"FUERZA", seriesSug:3, repsSug:"—"},
+      {id:"a7",  name:"Press banco plano barra",            bloque:"FUERZA", seriesSug:3, repsSug:"8"},
+      {id:"a8",  name:"Sentadilla isométrica",              bloque:"FUERZA", seriesSug:3, repsSug:"2×5\""},
+      {id:"a9",  name:"Salto cajón",                        bloque:"FUERZA", seriesSug:3, repsSug:"5"},
+      {id:"a10", name:"Press hombros arrodillado",          bloque:"FUERZA", seriesSug:3, repsSug:"8"},
+      {id:"a11", name:"Estocadas con saltos",               bloque:"FUERZA", seriesSug:3, repsSug:"5 c/lado"},
+      {id:"a12", name:"Tríceps acostado con disco",         bloque:"FUERZA", seriesSug:3, repsSug:"12"},
+      {id:"a13", name:"Press paloff",                       bloque:"FUERZA", seriesSug:3, repsSug:"12\" c/lado"},
+    ]
+  },
+  {
+    id:"B", name:"Día 2 — Fuerza Resistencia",
+    exercises:[
+      {id:"b1",  name:"Movilidad articular general",        bloque:"CORE",   seriesSug:1, repsSug:"5'"},
+      {id:"b2",  name:"Puente alto toco hombros iso",       bloque:"CORE",   seriesSug:3, repsSug:"10\" c/lado"},
+      {id:"b3",  name:"Toco talones",                       bloque:"CORE",   seriesSug:3, repsSug:"20"},
+      {id:"b4",  name:"Tras nuca bastón",                   bloque:"CORE",   seriesSug:3, repsSug:"8"},
+      {id:"b5",  name:"Remo polea 1 brazo arrodillado",     bloque:"FUERZA", seriesSug:3, repsSug:"8 c/lado"},
+      {id:"b6",  name:"Apertura máquina",                   bloque:"FUERZA", seriesSug:3, repsSug:"12"},
+      {id:"b7",  name:"Prensa 45°",                         bloque:"FUERZA", seriesSug:3, repsSug:"8 + 5\" iso"},
+      {id:"b8",  name:"Caminata lateral banda circular",    bloque:"FUERZA", seriesSug:3, repsSug:"20"},
+      {id:"b9",  name:"Sóleo isométrico",                   bloque:"FUERZA", seriesSug:3, repsSug:"20\""},
+      {id:"b10", name:"Tibial en pared",                    bloque:"FUERZA", seriesSug:3, repsSug:"15"},
+      {id:"b11", name:"Remo T sentado",                     bloque:"FUERZA", seriesSug:3, repsSug:"8"},
+      {id:"b12", name:"Sentadilla isométrica pared",        bloque:"FUERZA", seriesSug:3, repsSug:"20\""},
+      {id:"b13", name:"Tríceps polea",                      bloque:"FUERZA", seriesSug:3, repsSug:"12"},
+    ]
+  },
+  {
+    id:"C", name:"Día 3 — Mixto",
+    exercises:[
+      {id:"c1", name:"Bici",                                       bloque:"BLOQUE 1", seriesSug:1, repsSug:"10' continuos"},
+      {id:"c2", name:"Extensión cadera arrodillado con banda",      bloque:"BLOQUE 2", seriesSug:4, repsSug:"12"},
+      {id:"c3", name:"Bicho muerto",                               bloque:"BLOQUE 2", seriesSug:4, repsSug:"12"},
+      {id:"c4", name:"Bird dog",                                   bloque:"BLOQUE 2", seriesSug:4, repsSug:"12"},
+      {id:"c5", name:"Abro cierre step",                           bloque:"BLOQUE 3", seriesSug:3, repsSug:"12"},
+      {id:"c6", name:"Coordinación step",                          bloque:"BLOQUE 3", seriesSug:3, repsSug:"20"},
+      {id:"c7", name:"Lado lado step",                             bloque:"BLOQUE 3", seriesSug:3, repsSug:"12"},
+      {id:"c8", name:"Cinta (4' trote moderado x 1' caminata)",    bloque:"EXTRA",    seriesSug:1, repsSug:"15'"},
+    ]
+  },
+  {
+    id:"D", name:"Día 4 — Fuerza",
+    exercises:[
+      {id:"d1",  name:"Movilidad articular general",               bloque:"CORE",   seriesSug:1, repsSug:"5'"},
+      {id:"d2",  name:"Paloff vuelo frontal completo",             bloque:"CORE",   seriesSug:3, repsSug:"8 c/lado"},
+      {id:"d3",  name:"Puente lateral rotación",                   bloque:"CORE",   seriesSug:3, repsSug:"10 c/lado"},
+      {id:"d4",  name:"Pte isquio isométrico",                     bloque:"CORE",   seriesSug:3, repsSug:"12\""},
+      {id:"d5",  name:"Subidas cajón alterno",                     bloque:"FUERZA", seriesSug:3, repsSug:"12"},
+      {id:"d6",  name:"Press pecho alterno",                       bloque:"FUERZA", seriesSug:3, repsSug:"6 c/lado"},
+      {id:"d7",  name:"Prensa 45° 1 pierna",                       bloque:"FUERZA", seriesSug:3, repsSug:"8 c/lado"},
+      {id:"d8",  name:"Silla cuádriceps 1 pierna isométrico",      bloque:"FUERZA", seriesSug:3, repsSug:"2×5\" c/lado"},
+      {id:"d9",  name:"Camilla isquios",                           bloque:"FUERZA", seriesSug:3, repsSug:"6\" c/lado"},
+      {id:"d10", name:"Tríceps soga",                              bloque:"FUERZA", seriesSug:3, repsSug:"12"},
+      {id:"d11", name:"Curl press alterno",                        bloque:"FUERZA", seriesSug:3, repsSug:"6 c/lado"},
+      {id:"d12", name:"Push escapulares",                          bloque:"FUERZA", seriesSug:3, repsSug:"12"},
+      {id:"d13", name:"Skiping minitramp",                         bloque:"FUERZA", seriesSug:3, repsSug:"20\""},
+    ]
+  }
+];
+
+const PALETTE = {
+  A: { grad:"linear-gradient(135deg,#6366f1,#4f46e5)", light:"#ede9fe", text:"#3730a3", solid:"#4f46e5" },
+  B: { grad:"linear-gradient(135deg,#0ea5e9,#0284c7)", light:"#e0f2fe", text:"#075985", solid:"#0284c7" },
+  C: { grad:"linear-gradient(135deg,#10b981,#059669)", light:"#d1fae5", text:"#065f46", solid:"#059669" },
+  D: { grad:"linear-gradient(135deg,#f59e0b,#d97706)", light:"#fef3c7", text:"#92400e", solid:"#d97706" },
+};
+
+const BLOQUE_STYLE = {
+  "CORE":     { bg:"#fef3c7", text:"#92400e", border:"#fcd34d" },
+  "FUERZA":   { bg:"#dbeafe", text:"#1e40af", border:"#93c5fd" },
+  "BLOQUE 1": { bg:"#d1fae5", text:"#065f46", border:"#6ee7b7" },
+  "BLOQUE 2": { bg:"#d1fae5", text:"#065f46", border:"#6ee7b7" },
+  "BLOQUE 3": { bg:"#d1fae5", text:"#065f46", border:"#6ee7b7" },
+  "EXTRA":    { bg:"#fce7f3", text:"#9d174d", border:"#f9a8d4" },
+};
+
+// ─── State ────────────────────────────────────────────────────
+let sessions = JSON.parse(localStorage.getItem(SESSION_KEY) || "[]");
+let activeRoutineId = null;
+let trainData = {};       // { exId: [{reps,peso}] }
+let expandedEx = null;
+
+function saveSessions() { localStorage.setItem(SESSION_KEY, JSON.stringify(sessions)); }
+
+function timeAgo(d) {
+  const diff = Math.floor((Date.now() - new Date(d)) / 86400000);
+  return diff === 0 ? "hoy" : diff === 1 ? "ayer" : `hace ${diff} días`;
+}
+
+function getLastPeso(routineId, exId) {
+  const prev = [...sessions].reverse().find(s => s.routineId === routineId);
+  if (!prev) return null;
+  const sets = (prev.exercises?.[exId] || []).filter(s => s.peso);
+  return sets.length ? sets[sets.length-1].peso : null;
+}
+
+function groupByBloque(exercises) {
+  const groups = []; let cur = null;
+  for (const ex of exercises) {
+    if (!cur || cur.bloque !== ex.bloque) { cur = {bloque:ex.bloque, items:[]}; groups.push(cur); }
+    cur.items.push(ex);
+  }
+  return groups;
+}
+
+// ─── Screens ──────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById("screen-" + name).classList.add("active");
+  if (name === "home")    renderHome();
+  if (name === "history") renderHistory();
+}
+
+// ─── HOME ─────────────────────────────────────────────────────
+function renderHome() {
+  const last = sessions.length ? sessions[sessions.length-1] : null;
+  document.getElementById("home-subtitle").innerText = last
+    ? `Última: Día ${last.routineId} · ${timeAgo(last.date)}`
+    : "Elegí tu rutina de hoy";
+
+  const list = document.getElementById("routine-list");
+  list.innerHTML = ROUTINES.map(r => {
+    const p = PALETTE[r.id];
+    const isLast = last?.routineId === r.id;
+    return `
+      <div class="routine-card" onclick="startTrain('${r.id}')">
+        <div class="routine-accent" style="background:${p.grad}"></div>
+        <div class="routine-inner">
+          <div class="routine-badge" style="background:${p.grad}">${r.id}</div>
+          <div class="routine-info">
+            <div class="routine-name">${r.name}</div>
+            <div class="routine-meta">
+              ${r.exercises.length} ejercicios
+              ${isLast ? `<span class="tag-last" style="background:${p.light};color:${p.text}">última vez</span>` : ""}
+            </div>
+          </div>
+          <div class="routine-arrow" style="background:${p.light};color:${p.solid}">›</div>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+// ─── TRAIN ────────────────────────────────────────────────────
+function startTrain(id) {
+  activeRoutineId = id;
+  const r = ROUTINES.find(r => r.id === id);
+  const p = PALETTE[id];
+  trainData = {};
+  r.exercises.forEach(ex => { trainData[ex.id] = [{reps:"", peso:""}]; });
+  expandedEx = r.exercises[0]?.id || null;
+
+  document.getElementById("train-hdr").style.background = p.grad;
+  document.getElementById("train-title").innerText = r.name;
+  document.getElementById("train-date").innerText = new Date().toLocaleDateString("es-AR", {weekday:"long", day:"numeric", month:"long"});
+  document.getElementById("btn-finish").style.background = p.grad;
+  document.getElementById("btn-finish").style.cssText += `background:${p.grad}`;
+
+  document.documentElement.style.setProperty("--accent", p.solid);
+
+  showScreen("train");
+  renderExercises();
+}
+
+function renderExercises() {
+  const r = ROUTINES.find(r => r.id === activeRoutineId);
+  const p = PALETTE[activeRoutineId];
+  const groups = groupByBloque(r.exercises);
+
+  // Progress
+  const done = r.exercises.filter(ex => trainData[ex.id]?.some(s => s.reps || s.peso)).length;
+  const total = r.exercises.length;
+  document.getElementById("progress-fill").style.width = `${(done/total)*100}%`;
+  document.getElementById("progress-label").innerText = `${done} de ${total} ejercicios completados`;
+
+  const list = document.getElementById("exercise-list");
+  list.innerHTML = groups.map(group => {
+    const bs = BLOQUE_STYLE[group.bloque] || BLOQUE_STYLE.FUERZA;
+    const items = group.items.map(ex => {
+      const sets = trainData[ex.id] || [];
+      const hasDone = sets.some(s => s.reps || s.peso);
+      const lastPeso = getLastPeso(activeRoutineId, ex.id);
+      const isOpen = expandedEx === ex.id;
+
+      const setsHTML = sets.map((s, i) => `
+        <div class="set-row">
+          <div class="set-num" style="background:${p.light};color:${p.text}">${i+1}</div>
+          <input class="set-input" type="number" inputmode="decimal" placeholder="—" value="${s.reps}"
+            onchange="updateSet('${ex.id}',${i},'reps',this.value)" onfocus="this.select()">
+          <input class="set-input" type="number" inputmode="decimal" placeholder="—" value="${s.peso}"
+            onchange="updateSet('${ex.id}',${i},'peso',this.value)" onfocus="this.select()">
+        </div>`).join("");
+
+      return `
+        <div class="ex-card ${hasDone?'done':'pending'}" id="ex-${ex.id}" style="${hasDone?`--accent:${p.solid}`:''}">
+          <div class="ex-row" onclick="toggleEx('${ex.id}')">
+            <div class="ex-check ${hasDone?'done':'pending'}" style="${hasDone?`background:${p.solid}`:''}">
+              ${hasDone ? "✓" : "○"}
+            </div>
+            <div class="ex-info">
+              <div class="ex-name">${ex.name}</div>
+              <div class="ex-sug">
+                ${ex.seriesSug} series · ${ex.repsSug} reps
+                ${lastPeso ? `<span class="ex-prev" style="color:${p.solid}"> · prev: ${lastPeso}kg</span>` : ""}
+              </div>
+            </div>
+            <span class="ex-chevron ${isOpen?'open':''}">›</span>
+          </div>
+          ${isOpen ? `
+          <div class="ex-body">
+            <div class="sets-header">
+              <span>#</span><span>Reps</span><span>Peso kg</span>
+            </div>
+            ${setsHTML}
+            <button class="btn-add-set" style="background:${p.light};color:${p.text}" onclick="addSet('${ex.id}')">
+              + Agregar serie
+            </button>
+          </div>` : ""}
+        </div>`;
+    }).join("");
+
+    return `
+      <div class="bloque-sep">
+        <span class="bloque-tag" style="background:${bs.bg};color:${bs.text};border:1px solid ${bs.border}">${group.bloque}</span>
+        <div class="bloque-line"></div>
+      </div>
+      ${items}`;
+  }).join("");
+}
+
+function toggleEx(exId) {
+  expandedEx = expandedEx === exId ? null : exId;
+  renderExercises();
+}
+
+function updateSet(exId, idx, field, val) {
+  if (!trainData[exId]) trainData[exId] = [];
+  trainData[exId][idx] = { ...trainData[exId][idx], [field]: val };
+  renderExercises();
+}
+
+function addSet(exId) {
+  trainData[exId].push({reps:"", peso:""});
+  renderExercises();
+}
+
+function finishSession() {
+  sessions.push({ id: Date.now(), routineId: activeRoutineId, date: new Date().toISOString(), exercises: trainData });
+  saveSessions();
+  showScreen("home");
+}
+
+// ─── HISTORY ──────────────────────────────────────────────────
+function renderHistory() {
+  const list = document.getElementById("history-list");
+  if (!sessions.length) {
+    list.innerHTML = `<div class="empty">Todavía no completaste ninguna sesión.</div>`;
+    return;
+  }
+  list.innerHTML = [...sessions].reverse().map(session => {
+    const r = ROUTINES.find(r => r.id === session.routineId);
+    const p = PALETTE[session.routineId];
+    const done = r.exercises.filter(ex => (session.exercises?.[ex.id]||[]).some(s => s.reps||s.peso)).length;
+    const exRows = r.exercises.map(ex => {
+      const sets = (session.exercises?.[ex.id]||[]).filter(s => s.reps||s.peso);
+      if (!sets.length) return "";
+      const tags = sets.map((s,i) =>
+        `<span class="hist-set-tag" style="background:${p.light};color:${p.text}">${i+1}. ${s.reps||"—"} reps × ${s.peso||"—"} kg</span>`
+      ).join("");
+      return `<div class="hist-ex"><div class="hist-ex-name">${ex.name}</div><div class="hist-sets">${tags}</div></div>`;
+    }).join("");
+
+    return `
+      <div class="hist-card">
+        <div class="hist-hdr" style="background:${p.grad}">
+          <div class="hist-hdr-info">
+            <h3>${r.name}</h3>
+            <p>${new Date(session.date).toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}</p>
+          </div>
+          <div class="hist-count">${done} ej. completados</div>
+        </div>
+        <div class="hist-body">${exRows}</div>
+      </div>`;
+  }).join("");
+}
+
+// ─── Init ─────────────────────────────────────────────────────
+renderHome();
+</script>
+</body>
+</html>
