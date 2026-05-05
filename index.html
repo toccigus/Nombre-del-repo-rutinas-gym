@@ -127,7 +127,7 @@ const ROUTINES = [
     {id:"a10", name:"Press hombros arrodillado",         bloque:"FUERZA", seriesSug:3, repsSug:"8"},
     {id:"a11", name:"Estocadas con saltos",              bloque:"FUERZA", seriesSug:3, repsSug:"5 c/lado"},
     {id:"a12", name:"Tríceps acostado con disco",        bloque:"FUERZA", seriesSug:3, repsSug:"12"},
-    {id:"a13", name:"Press paloff",                      bloque:"FUERZA", seriesSug:3, repsSug:"12\" c/lado"},
+    {id:"a13", name:"Press paloff",                      bloque:"FUERZA", seriesSug:3, repsSug:"12\" c/lado", video:"FFX8VH5KrOI"},
   ]},
   { id:"B", name:"Día 2 — Fuerza Resistencia", exercises:[
     {id:"b1",  name:"Movilidad articular general",       bloque:"CORE",   seriesSug:1, repsSug:"5'"},
@@ -312,9 +312,15 @@ function renderTrain() {
             </div>
             <span class="ex-chevron ${isOpen ? 'open' : ''}">›</span>
           </div>
-          ${isOpen ? `
+                      ${isOpen ? `
           <div class="ex-body">
             ${series.length ? `<div class="series-badges">${badgesHTML}</div>` : ""}
+            ${ex.video ? `
+            <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:10px;margin-bottom:14px;">
+              <iframe src="https://www.youtube.com/embed/${ex.video}?rel=0"
+                style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:10px;"
+                allowfullscreen loading="lazy"></iframe>
+            </div>` : ""}
             <div class="peso-row">
               <input class="peso-input" type="number" inputmode="decimal" placeholder="Peso en kg (opcional)"
                 value="${pesoInput[ex.id] || ''}"
