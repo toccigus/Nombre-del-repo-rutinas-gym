@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Sebas — Rutinas</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;min-height:100vh;color:#1e293b}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-card{background:white;border-radius:16px;padding:32px;width:100%;max-width:360px;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.login-card h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.login-card p{font-size:13px;color:#64748b;margin-bottom:24px}
+.field{margin-bottom:14px}
+.field label{font-size:12px;color:#64748b;display:block;margin-bottom:5px}
+.field input{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;outline:none}
+.field input:focus{border-color:#4f46e5}
+.err{color:#e24b4a;font-size:12px;margin-top:8px;display:none}
+
+/* LAYOUT */
+#app{display:none;min-height:100vh}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:220px;background:white;border-right:0.5px solid #e2e8f0;padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:fixed;top:0;left:0;height:100vh}
+.sidebar-logo{font-size:15px;font-weight:600;color:#1e293b;padding:0 8px 16px;border-bottom:0.5px solid #e2e8f0;margin-bottom:8px}
+.nav-item{padding:9px 12px;border-radius:10px;font-size:13px;cursor:pointer;color:#64748b;display:flex;align-items:center;gap:10px}
+.nav-item:hover{background:#f8fafc}
+.nav-item.active{background:#ede9fe;color:#3730a3;font-weight:500}
+.nav-icon{font-size:15px;width:18px;text-align:center}
+.sidebar-footer{margin-top:auto;padding-top:12px;border-top:0.5px solid #e2e8f0;font-size:12px;color:#94a3b8}
+.main{margin-left:220px;flex:1;padding:24px}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.topbar h2{font-size:18px;font-weight:600}
+.btn{padding:8px 16px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;border:0.5px solid #e2e8f0;background:white;color:#1e293b;transition:all 0.15s}
+.btn:hover{background:#f8fafc}
+.btn-primary{background:#4f46e5;border-color:#4f46e5;color:white}
+.btn-primary:hover{background:#4338ca}
+.btn-danger{background:white;border-color:#fca5a5;color:#e24b4a}
+.btn-sm{padding:5px 12px;font-size:12px}
+
+/* SCREENS */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ALUMNOS */
+.alumno-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.alumno-card{background:white;border:0.5px solid #e2e8f0;border-radius:14px;padding:16px;cursor:pointer;transition:border-color 0.15s}
+.alumno-card:hover{border-color:#a5b4fc}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;margin-bottom:10px}
+.alumno-name{font-size:14px;font-weight:600;margin-bottom:3px}
+.alumno-meta{font-size:12px;color:#64748b}
+.badge{display:inline-block;padding:2px 9px;border-radius:50px;font-size:11px;font-weight:500;margin-top:8px}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:100;display:none}
+.modal-bg.open{display:flex}
+.modal{background:white;border-radius:16px;padding:24px;width:100%;max-width:420px}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+
+/* EDITOR RUTINA */
+.dias-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.dia-tab{padding:7px 16px;border-radius:10px;font-size:13px;cursor:pointer;border:0.5px solid #e2e8f0;background:white;color:#64748b;font-family:inherit}
+.dia-tab.active{background:#4f46e5;border-color:#4f46e5;color:white;font-weight:500}
+
+.bloque-section{margin-bottom:20px}
+.bloque-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bloque-tag{font-size:11px;font-weight:600;padding:3px 12px;border-radius:50px}
+.bloque-line{flex:1;height:1px;background:#e2e8f0}
+
+.ex-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f8fafc;border:0.5px solid #e2e8f0;border-radius:10px;margin-bottom:8px}
+.ex-name{flex:1;font-size:13px;font-weight:500;color:#1e293b}
+.ex-detail{font-size:11px;color:#64748b}
+.ex-yt{font-size:11px;color:#4f46e5}
+
+.add-ex-form{background:white;border:0.5px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:12px}
+.add-ex-form h4{font-size:13px;font-weight:600;margin-bottom:12px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.inp{width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none}
+.inp:focus{border-color:#4f46e5}
+.inp-label{font-size:11px;color:#64748b;margin-bottom:4px}
+
+/* HISTORIAL */
+.hist-alumno-select{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.hist-ex-select{margin-bottom:20px}
+.progress-card{background:white;border:0.5px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:12px}
+.progress-card h4{font-size:13px;font-weight:600;margin-bottom:12px}
+.prog-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.prog-date{font-size:11px;color:#64748b;min-width:70px}
+.prog-bar-wrap{flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden}
+.prog-bar{height:100%;border-radius:4px;background:#4f46e5;transition:width 0.4s}
+.prog-val{font-size:12px;font-weight:600;min-width:55px;text-align:right}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.stat-box{background:#f8fafc;border-radius:10px;padding:12px;text-align:center}
+.stat-num{font-size:20px;font-weight:600;color:#4f46e5}
+.stat-lbl{font-size:11px;color:#64748b;margin-top:2px}
+
+.link-box{background:#f8fafc;border:0.5px solid #e2e8f0;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-top:6px}
+.link-url{font-size:12px;color:#4f46e5;flex:1;font-family:monospace;word-break:break-all}
+
+.empty{text-align:center;color:#94a3b8;font-size:14px;padding:40px}
+.loading{text-align:center;color:#94a3b8;font-size:13px;padding:24px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>Panel Sebas</h1>
+    <p>Ingresá tu contraseña para continuar</p>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="pwd-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:11px" onclick="login()">Entrar</button>
+    <div class="err" id="login-err">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-logo">Panel Sebas</div>
+      <div class="nav-item active" onclick="showScreen('alumnos',this)">
+        <span class="nav-icon">👥</span> Alumnos
+      </div>
+      <div class="nav-item" onclick="showScreen('rutina',this)">
+        <span class="nav-icon">📋</span> Editar rutina
+      </div>
+      <div class="nav-item" onclick="showScreen('historial',this)">
+        <span class="nav-icon">📈</span> Historial
+      </div>
+      <div class="sidebar-footer">Sebas Trainer</div>
+    </div>
+
+    <div class="main">
+      <!-- ALUMNOS -->
+      <div id="screen-alumnos" class="screen active">
+        <div class="topbar">
+          <h2>Mis alumnos</h2>
+          <button class="btn btn-primary" onclick="openModalAlumno()">+ Nuevo alumno</button>
+        </div>
+        <div id="alumnos-list" class="loading">Cargando...</div>
+      </div>
+
+      <!-- RUTINA -->
+      <div id="screen-rutina" class="screen">
+        <div class="topbar">
+          <div>
+            <h2 id="rutina-title">Editar rutina</h2>
+            <div style="font-size:12px;color:#64748b;margin-top:2px" id="rutina-sub">Seleccioná un alumno primero</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="select-alumno-rutina" class="inp" style="width:auto" onchange="onAlumnoRutinaChange()">
+              <option value="">— Elegir alumno —</option>
+            </select>
+            <select id="select-dias" class="inp" style="width:auto" onchange="onDiasChange()">
+              <option value="2">2 días / semana</option>
+              <option value="3">3 días / semana</option>
+              <option value="4" selected>4 días / semana</option>
+            </select>
+          </div>
+        </div>
+        <div class="dias-tabs" id="dias-tabs"></div>
+        <div id="rutina-content"><div class="empty">Seleccioná un alumno para editar su rutina</div></div>
+      </div>
+
+      <!-- HISTORIAL -->
+      <div id="screen-historial" class="screen">
+        <div class="topbar"><h2>Historial de progreso</h2></div>
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+          <select id="select-alumno-hist" class="inp" style="width:auto;min-width:180px" onchange="loadHistorial()">
+            <option value="">— Elegir alumno —</option>
+          </select>
+          <select id="select-ex-hist" class="inp" style="width:auto;min-width:200px" onchange="renderHistorial()">
+            <option value="">— Elegir ejercicio —</option>
+          </select>
+        </div>
+        <div id="historial-content"><div class="empty">Seleccioná un alumno y un ejercicio</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO ALUMNO -->
+<div class="modal-bg" id="modal-alumno">
+  <div class="modal">
+    <h3>Nuevo alumno</h3>
+    <div class="field"><label class="inp-label">Nombre completo</label><input class="inp" id="new-nombre" placeholder="Ej: Gustavo Tocci"></div>
+    <div class="field"><label class="inp-label">Días por semana</label>
+      <select class="inp" id="new-dias">
+        <option value="2">2 días</option>
+        <option value="3">3 días</option>
+        <option value="4" selected>4 días</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="inp-label">Link de acceso (generado automáticamente)</label>
+      <div class="link-box"><span class="link-url" id="preview-link">tuapp.netlify.app/...</span></div>
+    </div>
+    <div class="err" id="modal-err">Completá el nombre</div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-alumno')">Cancelar</button>
+      <button class="btn btn-primary" onclick="crearAlumno()">Crear alumno</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO EJERCICIO -->
+<div class="modal-bg" id="modal-ejercicio">
+  <div class="modal">
+    <h3>Agregar ejercicio</h3>
+    <div class="field"><label class="inp-label">Nombre del ejercicio</label><input class="inp" id="new-ex-nombre" placeholder="Ej: Press banco plano barra"></div>
+    <div class="form-grid">
+      <div><label class="inp-label">Bloque</label><input class="inp" id="new-ex-bloque" placeholder="Ej: CORE, FUERZA"></div>
+      <div><label class="inp-label">Series</label><input class="inp" id="new-ex-series" type="number" placeholder="3" value="3"></div>
+    </div>
+    <div class="form-grid">
+      <div><label class="inp-label">Reps / Tiempo</label><input class="inp" id="new-ex-reps" placeholder="Ej: 12, 5' , 8 c/lado"></div>
+      <div><label class="inp-label">Video YouTube (ID)</label><input class="inp" id="new-ex-video" placeholder="Ej: FFX8VH5KrOI"></div>
+    </div>
+    <div class="err" id="ex-err">Completá el nombre del ejercicio</div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-ejercicio')">Cancelar</button>
+      <button class="btn btn-primary" onclick="agregarEjercicio()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://jcmpuhhzehrtybmorwbe.supabase.co";
+const SUPABASE_KEY = "sb_publishable_jcH7qTPqM5hK1vM45KJEDA_x68mKMln";
+const PASSWORD     = "sebas2024"; // ← Sebas puede cambiar esto
+const APP_URL      = window.location.origin;
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const AVATAR_COLORS = [
+  {bg:"#ede9fe",text:"#3730a3"},{bg:"#e0f2fe",text:"#075985"},
+  {bg:"#d1fae5",text:"#065f46"},{bg:"#fce7f3",text:"#9d174d"},
+  {bg:"#fef3c7",text:"#92400e"},{bg:"#dbeafe",text:"#1e40af"},
+];
+
+let alumnos = [];
+let alumnoActivo = null;
+let diaActivo = 1;
+let ejerciciosActivos = [];
+let sesionesHist = [];
+
+// ── LOGIN ─────────────────────────────────────────────────────
+function login() {
+  const pwd = document.getElementById("pwd-input").value;
+  if (pwd === PASSWORD) {
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    init();
+  } else {
+    document.getElementById("login-err").style.display = "block";
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+async function init() {
+  await loadAlumnos();
+  populateAlumnoSelects();
+}
+
+async function loadAlumnos() {
+  const { data } = await db.from("alumnos").select("*").order("created_at");
+  alumnos = data || [];
+}
+
+function populateAlumnoSelects() {
+  const opts = alumnos.map(a => `<option value="${a.id}">${a.nombre}</option>`).join("");
+  document.getElementById("select-alumno-rutina").innerHTML = `<option value="">— Elegir alumno —</option>` + opts;
+  document.getElementById("select-alumno-hist").innerHTML   = `<option value="">— Elegir alumno —</option>` + opts;
+}
+
+// ── SCREENS ───────────────────────────────────────────────────
+function showScreen(name, el) {
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("screen-" + name).classList.add("active");
+  if (name === "alumnos") renderAlumnos();
+}
+
+// ── ALUMNOS ───────────────────────────────────────────────────
+function renderAlumnos() {
+  const el = document.getElementById("alumnos-list");
+  if (!alumnos.length) { el.innerHTML = `<div class="empty">No hay alumnos. Creá el primero.</div>`; return; }
+  el.innerHTML = `<div class="alumno-grid">${alumnos.map((a,i) => {
+    const c = AVATAR_COLORS[i % AVATAR_COLORS.length];
+    const initials = a.nombre.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+    return `
+      <div class="alumno-card">
+        <div class="avatar" style="background:${c.bg};color:${c.text}">${initials}</div>
+        <div class="alumno-name">${a.nombre}</div>
+        <div class="alumno-meta">${a.dias_semana} días / semana</div>
+        <div style="margin-top:6px">
+          <div class="link-box" style="margin-top:6px">
+            <span class="link-url">${APP_URL}/${a.slug}</span>
+            <button class="btn btn-sm" onclick="copyLink('${APP_URL}/${a.slug}',this)">Copiar</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <button class="btn btn-sm" onclick="irAEditar('${a.id}')">Editar rutina</button>
+          <button class="btn btn-sm btn-danger" onclick="eliminarAlumno('${a.id}')">Eliminar</button>
+        </div>
+      </div>`;
+  }).join("")}</div>`;
+}
+
+function copyLink(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    btn.innerText = "✓ Copiado";
+    setTimeout(() => btn.innerText = "Copiar", 2000);
+  });
+}
+
+function irAEditar(id) {
+  document.querySelectorAll(".nav-item")[1].click();
+  document.getElementById("select-alumno-rutina").value = id;
+  onAlumnoRutinaChange();
+}
+
+// ── MODAL ALUMNO ──────────────────────────────────────────────
+function openModalAlumno() {
+  document.getElementById("new-nombre").value = "";
+  document.getElementById("preview-link").innerText = `${APP_URL}/...`;
+  document.getElementById("modal-err").style.display = "none";
+  document.getElementById("modal-alumno").classList.add("open");
+  document.getElementById("new-nombre").addEventListener("input", e => {
+    const slug = slugify(e.target.value);
+    document.getElementById("preview-link").innerText = `${APP_URL}/${slug}`;
+  });
+}
+
+function slugify(text) {
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"");
+}
+
+async function crearAlumno() {
+  const nombre = document.getElementById("new-nombre").value.trim();
+  const dias   = parseInt(document.getElementById("new-dias").value);
+  if (!nombre) { document.getElementById("modal-err").style.display = "block"; return; }
+  const slug = slugify(nombre);
+  const { error } = await db.from("alumnos").insert({ nombre, slug, dias_semana: dias });
+  if (error) { alert("Error: " + error.message); return; }
+  closeModal("modal-alumno");
+  await loadAlumnos();
+  populateAlumnoSelects();
+  renderAlumnos();
+}
+
+async function eliminarAlumno(id) {
+  if (!confirm("¿Eliminar este alumno y toda su rutina?")) return;
+  await db.from("alumnos").delete().eq("id", id);
+  await loadAlumnos();
+  populateAlumnoSelects();
+  renderAlumnos();
+}
+
+// ── EDITOR RUTINA ─────────────────────────────────────────────
+async function onAlumnoRutinaChange() {
+  const id = document.getElementById("select-alumno-rutina").value;
+  if (!id) return;
+  alumnoActivo = alumnos.find(a => a.id === id);
+  document.getElementById("rutina-title").innerText = alumnoActivo.nombre;
+  document.getElementById("rutina-sub").innerText = `${alumnoActivo.dias_semana} días / semana`;
+  document.getElementById("select-dias").value = alumnoActivo.dias_semana;
+  diaActivo = 1;
+  renderDiasTabs();
+  await loadEjercicios();
+}
+
+async function onDiasChange() {
+  if (!alumnoActivo) return;
+  const dias = parseInt(document.getElementById("select-dias").value);
+  await db.from("alumnos").update({ dias_semana: dias }).eq("id", alumnoActivo.id);
+  alumnoActivo.dias_semana = dias;
+  document.getElementById("rutina-sub").innerText = `${dias} días / semana`;
+  if (diaActivo > dias) diaActivo = 1;
+  renderDiasTabs();
+}
+
+function renderDiasTabs() {
+  const dias = alumnoActivo.dias_semana;
+  document.getElementById("dias-tabs").innerHTML = Array.from({length:dias},(_,i) =>
+    `<button class="dia-tab ${i+1===diaActivo?'active':''}" onclick="switchDia(${i+1})">Día ${i+1}</button>`
+  ).join("");
+}
+
+async function switchDia(n) {
+  diaActivo = n;
+  renderDiasTabs();
+  await loadEjercicios();
+}
+
+async function loadEjercicios() {
+  if (!alumnoActivo) return;
+  const { data } = await db.from("ejercicios")
+    .select("*")
+    .eq("alumno_id", alumnoActivo.id)
+    .eq("dia", diaActivo)
+    .order("orden");
+  ejerciciosActivos = data || [];
+  renderEjercicios();
+}
+
+function renderEjercicios() {
+  const el = document.getElementById("rutina-content");
+  const groups = groupByBloque(ejerciciosActivos);
+  const bloqueColors = {
+    "CORE":{"bg":"#fef3c7","text":"#92400e","border":"#fcd34d"},
+    "FUERZA":{"bg":"#dbeafe","text":"#1e40af","border":"#93c5fd"},
+  };
+  const defaultBC = {"bg":"#f0fdf4","text":"#166534","border":"#86efac"};
+
+  let html = groups.map(g => {
+    const bc = bloqueColors[g.bloque] || defaultBC;
+    const rows = g.items.map(ex => `
+      <div class="ex-row">
+        <div style="flex:1">
+          <div class="ex-name">${ex.nombre}</div>
+          <div class="ex-detail">${ex.series_sug} series · ${ex.reps_sug || "—"} reps
+            ${ex.video_id ? `<span class="ex-yt"> · YT: ${ex.video_id}</span>` : ""}
+          </div>
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="eliminarEjercicio('${ex.id}')">✕</button>
+      </div>`).join("");
+    return `
+      <div class="bloque-header">
+        <span class="bloque-tag" style="background:${bc.bg};color:${bc.text};border:1px solid ${bc.border}">${g.bloque}</span>
+        <div class="bloque-line"></div>
+      </div>
+      ${rows}`;
+  }).join("");
+
+  html += `<button class="btn" style="margin-top:16px;width:100%;border-style:dashed" onclick="openModalEjercicio()">+ Agregar ejercicio</button>`;
+  el.innerHTML = html;
+}
+
+function groupByBloque(exs) {
+  const g = []; let cur = null;
+  for (const ex of exs) {
+    const b = ex.bloque || "SIN BLOQUE";
+    if (!cur || cur.bloque !== b) { cur = {bloque:b, items:[]}; g.push(cur); }
+    cur.items.push(ex);
+  }
+  if (!g.length) g.push({bloque:"FUERZA", items:[]});
+  return g;
+}
+
+function openModalEjercicio() {
+  ["new-ex-nombre","new-ex-bloque","new-ex-reps","new-ex-video"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("new-ex-series").value = "3";
+  document.getElementById("ex-err").style.display = "none";
+  document.getElementById("modal-ejercicio").classList.add("open");
+}
+
+async function agregarEjercicio() {
+  const nombre = document.getElementById("new-ex-nombre").value.trim();
+  if (!nombre) { document.getElementById("ex-err").style.display = "block"; return; }
+  const orden = ejerciciosActivos.length;
+  await db.from("ejercicios").insert({
+    alumno_id: alumnoActivo.id,
+    dia: diaActivo,
+    bloque: document.getElementById("new-ex-bloque").value.trim().toUpperCase() || "FUERZA",
+    nombre,
+    series_sug: parseInt(document.getElementById("new-ex-series").value) || 3,
+    reps_sug: document.getElementById("new-ex-reps").value.trim(),
+    video_id: document.getElementById("new-ex-video").value.trim(),
+    orden,
+  });
+  closeModal("modal-ejercicio");
+  await loadEjercicios();
+}
+
+async function eliminarEjercicio(id) {
+  if (!confirm("¿Eliminar este ejercicio?")) return;
+  await db.from("ejercicios").delete().eq("id", id);
+  await loadEjercicios();
+}
+
+// ── HISTORIAL ─────────────────────────────────────────────────
+async function loadHistorial() {
+  const alumnoId = document.getElementById("select-alumno-hist").value;
+  if (!alumnoId) return;
+  const alumno = alumnos.find(a => a.id === alumnoId);
+
+  const { data: sesiones } = await db.from("sesiones")
+    .select("*").eq("alumno_id", alumnoId).order("fecha");
+  sesionesHist = sesiones || [];
+
+  const { data: ejercicios } = await db.from("ejercicios")
+    .select("*").eq("alumno_id", alumnoId);
+
+  const exSelect = document.getElementById("select-ex-hist");
+  exSelect.innerHTML = `<option value="">— Elegir ejercicio —</option>` +
+    (ejercicios || []).map(e => `<option value="${e.id}">${e.nombre} (Día ${e.dia})</option>`).join("");
+
+  renderHistorial();
+}
+
+function renderHistorial() {
+  const exId = document.getElementById("select-ex-hist").value;
+  const el   = document.getElementById("historial-content");
+  if (!exId || !sesionesHist.length) { el.innerHTML = `<div class="empty">Seleccioná un alumno y un ejercicio para ver el progreso</div>`; return; }
+
+  const datos = sesionesHist
+    .map(s => ({ fecha: s.fecha, peso: s.datos?.[exId]?.[0] }))
+    .filter(d => d.peso && d.peso !== "0");
+
+  if (!datos.length) { el.innerHTML = `<div class="empty">No hay datos registrados para este ejercicio todavía</div>`; return; }
+
+  const pesos  = datos.map(d => parseFloat(d.peso) || 0);
+  const maxP   = Math.max(...pesos);
+  const minP   = Math.min(...pesos);
+  const diff   = maxP - minP;
+  const pct    = minP > 0 ? Math.round(((maxP - minP) / minP) * 100) : 0;
+
+  el.innerHTML = `
+    <div class="progress-card">
+      <h4>Progresión de peso</h4>
+      ${datos.map(d => {
+        const p   = parseFloat(d.peso) || 0;
+        const w   = maxP > 0 ? Math.round((p / maxP) * 100) : 0;
+        const fec = new Date(d.fecha).toLocaleDateString("es-AR",{day:"numeric",month:"short"});
+        return `<div class="prog-row">
+          <span class="prog-date">${fec}</span>
+          <div class="prog-bar-wrap"><div class="prog-bar" style="width:${w}%"></div></div>
+          <span class="prog-val">${p} kg</span>
+        </div>`;
+      }).join("")}
+      <div class="stat-row">
+        <div class="stat-box"><div class="stat-num">${minP} kg</div><div class="stat-lbl">Inicio</div></div>
+        <div class="stat-box"><div class="stat-num">${maxP} kg</div><div class="stat-lbl">Máximo</div></div>
+        <div class="stat-box"><div class="stat-num" style="color:#059669">+${diff} kg</div><div class="stat-lbl">Progreso (${pct}%)</div></div>
+      </div>
+    </div>`;
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+</script>
+</body>
+</html>
