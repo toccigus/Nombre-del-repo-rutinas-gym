@@ -269,15 +269,9 @@ function login() {
 
 // ── INIT ──────────────────────────────────────────────────────
 async function init() {
-  console.log("init llamado");
-  try {
-    await loadAlumnos();
-    console.log("alumnos cargados:", alumnos);
-    populateAlumnoSelects();
-    renderAlumnos();
-  } catch(e) {
-    console.error("Error en init:", e);
-  }
+  await loadAlumnos();
+  populateAlumnoSelects();
+  renderAlumnos();
 }
 
 async function loadAlumnos() {
@@ -501,11 +495,15 @@ async function moverEjercicio(id, direccion) {
   const newIdx = idx + direccion;
   if (newIdx < 0 || newIdx >= ejerciciosActivos.length) return;
 
-  // Intercambiar orden
-  const a = ejerciciosActivos[idx];
-  const b = ejerciciosActivos[newIdx];
-  await db.from("ejercicios").update({ orden: b.orden }).eq("id", a.id);
-  await db.from("ejercicios").update({ orden: a.orden }).eq("id", b.id);
+  // Intercambiar en el array local
+  const tmp = ejerciciosActivos[idx];
+  ejerciciosActivos[idx] = ejerciciosActivos[newIdx];
+  ejerciciosActivos[newIdx] = tmp;
+
+  // Renumerar todos en secuencia para evitar duplicados
+  await Promise.all(ejerciciosActivos.map((ex, i) =>
+    db.from("ejercicios").update({ orden: i }).eq("id", ex.id)
+  ));
   await loadEjercicios();
 }
 
