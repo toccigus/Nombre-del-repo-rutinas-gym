@@ -269,8 +269,15 @@ function login() {
 
 // ── INIT ──────────────────────────────────────────────────────
 async function init() {
-  await loadAlumnos();
-  populateAlumnoSelects();
+  console.log("init llamado");
+  try {
+    await loadAlumnos();
+    console.log("alumnos cargados:", alumnos);
+    populateAlumnoSelects();
+    renderAlumnos();
+  } catch(e) {
+    console.error("Error en init:", e);
+  }
 }
 
 async function loadAlumnos() {
