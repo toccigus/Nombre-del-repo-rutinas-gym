@@ -163,8 +163,16 @@ async function init() {
   alumno = a;
   document.getElementById("home-title").innerText = `Hola, ${a.nombre.split(" ")[0]}`;
 
+  // Buscar rutina activa
+  const { data: rutinaActiva } = await db.from("rutinas")
+    .select("*").eq("alumno_id", a.id).eq("activa", true).single();
+
+  const rutinaId = rutinaActiva?.id;
+
   const { data: ejercicios } = await db.from("ejercicios")
-    .select("*").eq("alumno_id", a.id).order("orden");
+    .select("*").eq("alumno_id", a.id)
+    .eq("rutina_id", rutinaId || "")
+    .order("orden");
 
   rutinas = [];
   for(let d=1; d<=a.dias_semana; d++) {
