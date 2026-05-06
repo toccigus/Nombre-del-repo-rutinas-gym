@@ -269,15 +269,8 @@ function login() {
 
 // ── INIT ──────────────────────────────────────────────────────
 async function init() {
-  console.log("init llamado");
-  try {
-    await loadAlumnos();
-    console.log("alumnos cargados:", alumnos);
-    populateAlumnoSelects();
-    renderAlumnos();
-  } catch(e) {
-    console.error("Error en init:", e);
-  }
+  await loadAlumnos();
+  populateAlumnoSelects();
 }
 
 async function loadAlumnos() {
@@ -442,6 +435,10 @@ function renderEjercicios() {
             ${ex.video_id ? `<span class="ex-yt"> · YT: ${ex.video_id}</span>` : ""}
           </div>
         </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px" onclick="moverEjercicio('${ex.id}',-1)">↑</button>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px" onclick="moverEjercicio('${ex.id}',1)">↓</button>
+        </div>
         <button class="btn btn-sm btn-danger" onclick="eliminarEjercicio('${ex.id}')">✕</button>
       </div>`).join("");
     return `
@@ -489,6 +486,19 @@ async function agregarEjercicio() {
     orden,
   });
   closeModal("modal-ejercicio");
+  await loadEjercicios();
+}
+
+async function moverEjercicio(id, direccion) {
+  const idx = ejerciciosActivos.findIndex(e => e.id === id);
+  const newIdx = idx + direccion;
+  if (newIdx < 0 || newIdx >= ejerciciosActivos.length) return;
+
+  // Intercambiar orden
+  const a = ejerciciosActivos[idx];
+  const b = ejerciciosActivos[newIdx];
+  await db.from("ejercicios").update({ orden: b.orden }).eq("id", a.id);
+  await db.from("ejercicios").update({ orden: a.orden }).eq("id", b.id);
   await loadEjercicios();
 }
 
