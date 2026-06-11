@@ -416,8 +416,9 @@ async function activarRutina(id) {
     if (e1) { alert("Error al desactivar: " + e1.message); return; }
     const { error: e2 } = await db.from("rutinas").update({ activa: true }).eq("id", id);
     if (e2) { alert("Error al activar: " + e2.message); return; }
+    // Esperar que Supabase confirme antes de recargar
+    await new Promise(r => setTimeout(r, 500));
     await loadRutinasAlumno();
-    alert("✅ Rutina activada correctamente");
   } catch(e) {
     alert("Error inesperado: " + e.message);
   }
