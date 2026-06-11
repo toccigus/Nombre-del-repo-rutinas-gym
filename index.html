@@ -16,6 +16,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .hdr h1{font-size:22px;font-weight:600;color:white;margin-bottom:4px}
 .hdr p{font-size:13px;color:rgba(255,255,255,0.6)}
 .btn-ghost{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:8px 14px;color:white;font-size:13px;cursor:pointer;font-family:inherit;flex-shrink:0}
+
+/* HOME */
 .routine-card{background:white;border:0.5px solid #e2e8f0;border-radius:16px;padding:16px;margin:0 16px 12px;cursor:pointer;position:relative;overflow:hidden}
 .routine-card:active{opacity:0.85}
 .routine-accent{position:absolute;top:0;left:0;width:4px;height:100%}
@@ -24,7 +26,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .routine-name{font-weight:600;font-size:15px;color:#1e293b;margin-bottom:3px}
 .routine-meta{font-size:12px;color:#64748b;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .tag-last{font-size:11px;padding:2px 8px;border-radius:50px;font-weight:600}
+.tag-progress{font-size:11px;padding:2px 8px;border-radius:50px;font-weight:600;background:#fef3c7;color:#92400e}
 .routine-arrow{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+
+/* IN PROGRESS BANNER */
+.progress-banner{background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:14px 16px;margin:0 16px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.progress-banner-text{flex:1;color:white}
+.progress-banner-title{font-weight:600;font-size:14px}
+.progress-banner-sub{font-size:12px;opacity:0.85;margin-top:2px}
+.progress-banner-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:6px 12px;color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+
+/* TRAIN */
 .progress-wrap{margin-top:14px}
 .progress-bar{background:rgba(255,255,255,0.25);border-radius:50px;height:6px;overflow:hidden}
 .progress-fill{background:white;height:100%;border-radius:50px;transition:width 0.4s}
@@ -50,6 +62,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-hecho{border:none;border-radius:12px;padding:13px 22px;color:white;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap}
 .ex-hint{font-size:11px;color:#94a3b8;margin-top:8px;text-align:center}
 .btn-finish{display:block;width:calc(100% - 32px);margin:16px 16px 0;padding:16px;border:none;border-radius:14px;color:white;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit}
+
+/* HISTORY */
 .hist-card{background:white;border:0.5px solid #e2e8f0;border-radius:16px;margin:0 16px 12px;overflow:hidden}
 .hist-hdr{padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
 .hist-title{font-size:15px;font-weight:600;color:white}
@@ -74,13 +88,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button class="btn-ghost" onclick="showScreen('history')">Historial</button>
     </div>
   </div>
+  <div id="inprogress-banner"></div>
   <div id="routine-list"><div class="loading">Cargando rutinas...</div></div>
 </div>
 
 <div id="screen-train" class="screen">
   <div class="hdr" id="train-hdr">
     <div class="hdr-row" style="margin-bottom:14px">
-      <button class="btn-ghost" onclick="showScreen('home')">← Salir</button>
+      <button class="btn-ghost" onclick="salirSinFinalizar()">← Salir</button>
       <div><h1 id="train-title" style="font-size:17px"></h1><p id="train-date"></p></div>
     </div>
     <div class="progress-wrap">
@@ -103,8 +118,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <script>
-const SUPABASE_URL = "https://jcmpuhhzehrtybmorwbe.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjbXB1aGh6ZWhydHlibW9yd2JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTk2ODAsImV4cCI6MjA5MzU3NTY4MH0.7vy7vC0XG-FjE3fg40kh0Jm2rVA5xKLgQ98c44XuH2g";
+const SUPABASE_URL  = "https://jcmpuhhzehrtybmorwbe.supabase.co";
+const SUPABASE_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjbXB1aGh6ZWhydHlibW9yd2JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTk2ODAsImV4cCI6MjA5MzU3NTY4MH0.7vy7vC0XG-FjE3fg40kh0Jm2rVA5xKLgQ98c44XuH2g";
+const PROGRESS_KEY  = "gym_inprogress_v1";
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -124,37 +140,14 @@ const BLOQUE_STYLE = {
 };
 
 let alumno      = null;
-let rutinas     = [];   // [{dia, ejercicios:[]}]
+let rutinas     = [];
 let sesiones    = [];
 let activeRutina= null;
 let trainData   = {};
 let pesoInput   = {};
 let expandedEx  = null;
 
-const PROGRESS_KEY = "gym_inprogress_v1";
-
-function saveProgress() {
-  if (!activeRutina) return;
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify({
-    alumnoId: alumno.id,
-    dia: activeRutina.dia,
-    trainData,
-    pesoInput,
-    expandedEx,
-    fecha: new Date().toISOString()
-  }));
-}
-
-function clearProgress() {
-  localStorage.removeItem(PROGRESS_KEY);
-}
-
-function loadProgress() {
-  try {
-    const raw = localStorage.getItem(PROGRESS_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-}
+function timeAgo(d) {
   const diff = Math.floor((Date.now()-new Date(d))/86400000);
   return diff===0?"hoy":diff===1?"ayer":`hace ${diff} días`;
 }
@@ -176,25 +169,46 @@ function getLastPeso(diaNum, exId) {
   return null;
 }
 
+// ── PROGRESS PERSIST ──────────────────────────────────────────
+function saveProgress() {
+  if (!activeRutina) return;
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+    alumnoId: alumno.id,
+    dia: activeRutina.dia,
+    trainData,
+    pesoInput,
+    expandedEx,
+    fecha: new Date().toISOString()
+  }));
+}
+
+function clearProgress() {
+  localStorage.removeItem(PROGRESS_KEY);
+}
+
+function getProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 // ── INIT ──────────────────────────────────────────────────────
 async function init() {
   const slug = location.pathname.replace(/^\//, "").split("/")[0];
-  if (!slug) { document.getElementById("home-sub").innerText = "Link de alumno no encontrado"; return; }
+  if (!slug) { document.getElementById("home-sub").innerText = "Link no encontrado"; return; }
 
   const { data: a } = await db.from("alumnos").select("*").eq("slug", slug).single();
   if (!a) { document.getElementById("home-sub").innerText = "Alumno no encontrado"; return; }
   alumno = a;
   document.getElementById("home-title").innerText = `Hola, ${a.nombre.split(" ")[0]}`;
 
-  // Buscar rutina activa
   const { data: rutinaActiva } = await db.from("rutinas")
     .select("*").eq("alumno_id", a.id).eq("activa", true).single();
 
-  const rutinaId = rutinaActiva?.id;
-
   const { data: ejercicios } = await db.from("ejercicios")
     .select("*").eq("alumno_id", a.id)
-    .eq("rutina_id", rutinaId || "")
+    .eq("rutina_id", rutinaActiva?.id || "")
     .order("orden");
 
   rutinas = [];
@@ -216,9 +230,29 @@ function renderHome() {
     ? `Última sesión: Día ${last.dia} · ${timeAgo(last.fecha)}`
     : "Elegí tu rutina de hoy";
 
+  // Banner rutina en progreso
+  const prog = getProgress();
+  const bannerEl = document.getElementById("inprogress-banner");
+  if (prog && prog.alumnoId === alumno?.id) {
+    const r = rutinas.find(r => r.dia === prog.dia);
+    const done = r ? r.ejercicios.filter(ex => prog.trainData?.[ex.id]?.length > 0).length : 0;
+    bannerEl.innerHTML = `
+      <div class="progress-banner" onclick="continuarRutina()">
+        <div class="progress-banner-text">
+          <div class="progress-banner-title">⏸ Rutina en progreso — Día ${prog.dia}</div>
+          <div class="progress-banner-sub">${done} ejercicios completados · ${timeAgo(prog.fecha)}</div>
+        </div>
+        <button class="progress-banner-btn" onclick="continuarRutina()">Continuar →</button>
+      </div>`;
+  } else {
+    bannerEl.innerHTML = "";
+  }
+
   document.getElementById("routine-list").innerHTML = rutinas.map((r,i) => {
     const p = PALETTE[i % PALETTE.length];
     const isLast = last?.dia === r.dia;
+    const prog = getProgress();
+    const isInProgress = prog?.alumnoId === alumno?.id && prog?.dia === r.dia;
     return `
       <div class="routine-card" onclick="startTrain(${r.dia})">
         <div class="routine-accent" style="background:${p.grad}"></div>
@@ -228,7 +262,8 @@ function renderHome() {
             <div class="routine-name">Día ${r.dia}</div>
             <div class="routine-meta">
               ${r.ejercicios.length} ejercicios
-              ${isLast?`<span class="tag-last" style="background:${p.light};color:${p.text}">última vez</span>`:""}
+              ${isLast ? `<span class="tag-last" style="background:${p.light};color:${p.text}">última vez</span>` : ""}
+              ${isInProgress ? `<span class="tag-progress">⏸ en progreso</span>` : ""}
             </div>
           </div>
           <div class="routine-arrow" style="background:${p.light};color:${p.solid}">›</div>
@@ -239,34 +274,64 @@ function renderHome() {
 
 // ── TRAIN ─────────────────────────────────────────────────────
 function startTrain(dia) {
-  activeRutina = rutinas.find(r=>r.dia===dia);
-  trainData={};pesoInput={};
-  activeRutina.ejercicios.forEach(ex=>{trainData[ex.id]=[];});
-  expandedEx = activeRutina.ejercicios[0]?.id||null;
+  const prog = getProgress();
+
+  // Si hay una rutina en progreso de este mismo día, la continúa
+  if (prog && prog.alumnoId === alumno?.id && prog.dia === dia) {
+    continuarRutina();
+    return;
+  }
+
+  // Si hay una rutina en progreso de otro día, avisar
+  if (prog && prog.alumnoId === alumno?.id && prog.dia !== dia) {
+    if (!confirm(`Tenés el Día ${prog.dia} en progreso. ¿Querés abandonarlo y empezar el Día ${dia}?`)) return;
+    clearProgress();
+  }
+
+  activeRutina = rutinas.find(r => r.dia === dia);
+  trainData = {}; pesoInput = {};
+  activeRutina.ejercicios.forEach(ex => { trainData[ex.id] = []; });
+  expandedEx = activeRutina.ejercicios[0]?.id || null;
+  saveProgress();
   showScreen("train");
 }
 
+function continuarRutina() {
+  const prog = getProgress();
+  if (!prog) return;
+  activeRutina = rutinas.find(r => r.dia === prog.dia);
+  trainData    = prog.trainData || {};
+  pesoInput    = prog.pesoInput || {};
+  expandedEx   = prog.expandedEx || null;
+  showScreen("train");
+}
+
+function salirSinFinalizar() {
+  saveProgress();
+  showScreen("home");
+}
+
 function renderTrain() {
-  if(!activeRutina) return;
-  const i   = activeRutina.dia-1;
-  const p   = PALETTE[i%PALETTE.length];
+  if (!activeRutina) return;
+  const i = activeRutina.dia - 1;
+  const p = PALETTE[i % PALETTE.length];
   document.getElementById("train-hdr").style.background = p.grad;
   document.getElementById("train-title").innerText = `Día ${activeRutina.dia}`;
   document.getElementById("train-date").innerText   = new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"});
   document.getElementById("btn-finish").style.background = p.grad;
   document.documentElement.style.setProperty("--accent", p.solid);
 
-  const done  = activeRutina.ejercicios.filter(ex=>trainData[ex.id]?.length>0).length;
+  const done  = activeRutina.ejercicios.filter(ex => trainData[ex.id]?.length > 0).length;
   const total = activeRutina.ejercicios.length;
-  document.getElementById("progress-fill").style.width  = `${total?Math.round((done/total)*100):0}%`;
+  document.getElementById("progress-fill").style.width  = `${total ? Math.round((done/total)*100) : 0}%`;
   document.getElementById("progress-label").innerText   = `${done} de ${total} ejercicios completados`;
 
   const groups = groupByBloque(activeRutina.ejercicios);
-  document.getElementById("exercise-list").innerHTML = groups.map(group=>{
-    const bs = BLOQUE_STYLE[group.bloque]||BLOQUE_STYLE.FUERZA;
-    const items = group.items.map(ex=>{
-      const hasDone = trainData[ex.id]?.length>0;
-      const isOpen  = expandedEx===ex.id;
+  document.getElementById("exercise-list").innerHTML = groups.map(group => {
+    const bs = BLOQUE_STYLE[group.bloque] || BLOQUE_STYLE.FUERZA;
+    const items = group.items.map(ex => {
+      const hasDone = trainData[ex.id]?.length > 0;
+      const isOpen  = expandedEx === ex.id;
       const lp      = getLastPeso(activeRutina.dia, ex.id);
       return `
         <div class="ex-card ${hasDone?'done':''}" style="--accent:${p.solid}">
@@ -278,23 +343,23 @@ function renderTrain() {
               <div class="ex-name">${ex.nombre}</div>
               <div class="ex-sug">
                 ${ex.series_sug} series · ${ex.reps_sug||"—"} reps
-                ${lp?`<span class="ex-prev" style="color:${p.solid}"> · prev: ${lp} kg</span>`:""}
+                ${lp ? `<span class="ex-prev" style="color:${p.solid}"> · prev: ${lp} kg</span>` : ""}
               </div>
             </div>
             <span class="ex-chevron ${isOpen?'open':''}">›</span>
           </div>
-          ${isOpen?`
+          ${isOpen ? `
           <div class="ex-body">
-            ${ex.video_id?`<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${ex.video_id}?rel=0" allowfullscreen loading="lazy"></iframe></div>`:""}
+            ${ex.video_id ? `<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${ex.video_id}?rel=0" allowfullscreen loading="lazy"></iframe></div>` : ""}
             <div class="peso-row">
               <input class="peso-input" type="number" inputmode="decimal" placeholder="Peso en kg (opcional)"
                 value="${pesoInput[ex.id]||''}"
-                oninput="pesoInput['${ex.id}']=this.value"
+                oninput="pesoInput['${ex.id}']=this.value;saveProgress()"
                 onkeydown="if(event.key==='Enter') registrar('${ex.id}')">
               <button class="btn-hecho" style="background:${p.grad}" onclick="registrar('${ex.id}')">✓ Hecho</button>
             </div>
             <div class="ex-hint">Si no lleva peso, tocá Hecho directamente</div>
-          </div>`:""}
+          </div>` : ""}
         </div>`;
     }).join("");
     return `
@@ -306,18 +371,20 @@ function renderTrain() {
 }
 
 function toggleEx(exId) {
-  expandedEx = expandedEx===exId?null:exId;
+  expandedEx = expandedEx === exId ? null : exId;
+  saveProgress();
   renderTrain();
 }
 
 function registrar(exId) {
-  const ex   = activeRutina.ejercicios.find(e=>e.id===exId);
-  const peso = pesoInput[exId]||"0";
-  trainData[exId] = Array(ex.series_sug||1).fill(peso);
+  const ex   = activeRutina.ejercicios.find(e => e.id === exId);
+  const peso = pesoInput[exId] || "0";
+  trainData[exId] = Array(ex.series_sug || 1).fill(peso);
   pesoInput[exId] = "";
-  const idx  = activeRutina.ejercicios.findIndex(e=>e.id===exId);
-  const next = activeRutina.ejercicios[idx+1];
-  expandedEx = next?next.id:null;
+  const idx  = activeRutina.ejercicios.findIndex(e => e.id === exId);
+  const next = activeRutina.ejercicios[idx + 1];
+  expandedEx = next ? next.id : null;
+  saveProgress();
   renderTrain();
 }
 
@@ -327,26 +394,25 @@ async function finishSession() {
     dia: activeRutina.dia,
     datos: trainData,
   });
-  const {data:ses} = await db.from("sesiones").select("*").eq("alumno_id",alumno.id).order("fecha");
-  sesiones = ses||[];
+  const { data: ses } = await db.from("sesiones").select("*").eq("alumno_id", alumno.id).order("fecha");
+  sesiones = ses || [];
+  clearProgress();
   showScreen("home");
 }
 
 // ── HISTORY ───────────────────────────────────────────────────
 function renderHistory() {
   const list = document.getElementById("history-list");
-  if(!sesiones.length){
-    list.innerHTML=`<div class="empty">Todavía no completaste ninguna sesión.</div>`;return;
-  }
-  list.innerHTML=[...sesiones].reverse().map(session=>{
-    const r = rutinas.find(r=>r.dia===session.dia);
-    const p = PALETTE[(session.dia-1)%PALETTE.length];
-    const exs = r?.ejercicios||[];
-    const done= exs.filter(ex=>(session.datos?.[ex.id]||[]).length>0).length;
-    const exRows = exs.map(ex=>{
-      const series=(session.datos?.[ex.id]||[]);
-      if(!series.length)return"";
-      const tags=series.map((peso,i)=>
+  if (!sesiones.length) { list.innerHTML = `<div class="empty">Todavía no completaste ninguna sesión.</div>`; return; }
+  list.innerHTML = [...sesiones].reverse().map(session => {
+    const r = rutinas.find(r => r.dia === session.dia);
+    const p = PALETTE[(session.dia-1) % PALETTE.length];
+    const exs  = r?.ejercicios || [];
+    const done = exs.filter(ex => (session.datos?.[ex.id]||[]).length > 0).length;
+    const exRows = exs.map(ex => {
+      const series = (session.datos?.[ex.id]||[]);
+      if (!series.length) return "";
+      const tags = series.map((peso,i) =>
         `<span class="hist-set-tag" style="background:${p.light};color:${p.text}">S${i+1}: ${peso==="0"?"sin peso":peso+" kg"}</span>`
       ).join("");
       return `<div class="hist-ex"><div class="hist-ex-name">${ex.nombre}</div><div class="hist-sets">${tags}</div></div>`;
@@ -358,18 +424,17 @@ function renderHistory() {
           <div class="hist-date">${new Date(session.fecha).toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long"})}</div></div>
           <div class="hist-count">${done} ej. completados</div>
         </div>
-        <div class="hist-body">${exRows||'<p style="color:#94a3b8;font-size:13px">Sin datos</p>'}</div>
+        <div class="hist-body">${exRows || '<p style="color:#94a3b8;font-size:13px">Sin datos</p>'}</div>
       </div>`;
   }).join("");
 }
 
-// ── SCREEN ────────────────────────────────────────────────────
 function showScreen(name) {
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  document.getElementById("screen-"+name).classList.add("active");
-  if(name==="train")    renderTrain();
-  if(name==="home")     renderHome();
-  if(name==="history")  renderHistory();
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById("screen-" + name).classList.add("active");
+  if (name === "train")   renderTrain();
+  if (name === "home")    renderHome();
+  if (name === "history") renderHistory();
 }
 
 init();
