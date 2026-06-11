@@ -131,7 +131,30 @@ let trainData   = {};
 let pesoInput   = {};
 let expandedEx  = null;
 
-function timeAgo(d) {
+const PROGRESS_KEY = "gym_inprogress_v1";
+
+function saveProgress() {
+  if (!activeRutina) return;
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+    alumnoId: alumno.id,
+    dia: activeRutina.dia,
+    trainData,
+    pesoInput,
+    expandedEx,
+    fecha: new Date().toISOString()
+  }));
+}
+
+function clearProgress() {
+  localStorage.removeItem(PROGRESS_KEY);
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
   const diff = Math.floor((Date.now()-new Date(d))/86400000);
   return diff===0?"hoy":diff===1?"ayer":`hace ${diff} días`;
 }
