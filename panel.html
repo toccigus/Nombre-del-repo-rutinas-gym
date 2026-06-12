@@ -217,7 +217,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <!-- MODAL NUEVO EJERCICIO -->
 <div class="modal-bg" id="modal-ejercicio">
   <div class="modal">
-    <h3>Agregar ejercicio</h3>
+    <h3 id="modal-ex-title">Agregar ejercicio</h3>
     <div class="field"><label class="inp-label">Nombre del ejercicio</label><input class="inp" id="new-ex-nombre" placeholder="Ej: Press banco plano barra"></div>
     <div class="form-grid">
       <div><label class="inp-label">Bloque</label><input class="inp" id="new-ex-bloque" placeholder="CORE, FUERZA..."></div>
@@ -230,7 +230,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="err" id="ex-err">Completá el nombre</div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-ejercicio')">Cancelar</button>
-      <button class="btn btn-primary" onclick="agregarEjercicio()">Agregar</button>
+      <button class="btn btn-primary" id="btn-guardar-ex" onclick="agregarEjercicio()">Agregar</button>
     </div>
   </div>
 </div>
@@ -257,6 +257,7 @@ let rutinasAlumno = [];    // todas las versiones
 let diaActivo = 1;
 let ejerciciosActivos = [];
 let sesionesHist = [];
+let editingExId = null;
 
 // ── LOGIN ─────────────────────────────────────────────────────
 function login() {
@@ -528,6 +529,7 @@ function renderEjercicios() {
           <button class="btn btn-sm" style="padding:3px 8px;font-size:11px" onclick="moverEjercicio('${ex.id}',-1)">↑</button>
           <button class="btn btn-sm" style="padding:3px 8px;font-size:11px" onclick="moverEjercicio('${ex.id}',1)">↓</button>
         </div>
+        <button class="btn btn-sm" onclick="abrirEdicion('${ex.id}')">✏️</button>
         <button class="btn btn-sm btn-danger" onclick="eliminarEjercicio('${ex.id}')">✕</button>
       </div>`).join("");
     return `
@@ -566,26 +568,53 @@ async function moverEjercicio(id, dir) {
 }
 
 function openModalEjercicio() {
+  editingExId = null;
   ["new-ex-nombre","new-ex-bloque","new-ex-reps","new-ex-video"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("new-ex-series").value = "3";
   document.getElementById("ex-err").style.display = "none";
+  document.getElementById("modal-ex-title").innerText = "Agregar ejercicio";
+  document.getElementById("btn-guardar-ex").innerText = "Agregar";
+  document.getElementById("modal-ejercicio").classList.add("open");
+}
+
+function abrirEdicion(id) {
+  const ex = ejerciciosActivos.find(e => e.id === id);
+  if (!ex) return;
+  editingExId = id;
+  document.getElementById("new-ex-nombre").value = ex.nombre || "";
+  document.getElementById("new-ex-bloque").value = ex.bloque || "";
+  document.getElementById("new-ex-series").value = ex.series_sug || 3;
+  document.getElementById("new-ex-reps").value   = ex.reps_sug || "";
+  document.getElementById("new-ex-video").value  = ex.video_id || "";
+  document.getElementById("ex-err").style.display = "none";
+  document.getElementById("modal-ex-title").innerText = "Editar ejercicio";
+  document.getElementById("btn-guardar-ex").innerText = "Guardar cambios";
   document.getElementById("modal-ejercicio").classList.add("open");
 }
 
 async function agregarEjercicio() {
   const nombre = document.getElementById("new-ex-nombre").value.trim();
   if (!nombre) { document.getElementById("ex-err").style.display = "block"; return; }
-  await db.from("ejercicios").insert({
-    alumno_id: alumnoActivo.id,
-    rutina_id: rutinaActiva.id,
-    dia: diaActivo,
+
+  const payload = {
     bloque: document.getElementById("new-ex-bloque").value.trim().toUpperCase() || "FUERZA",
     nombre,
     series_sug: parseInt(document.getElementById("new-ex-series").value) || 3,
     reps_sug:   document.getElementById("new-ex-reps").value.trim(),
     video_id:   document.getElementById("new-ex-video").value.trim(),
-    orden: ejerciciosActivos.length,
-  });
+  };
+
+  if (editingExId) {
+    await db.from("ejercicios").update(payload).eq("id", editingExId);
+  } else {
+    await db.from("ejercicios").insert({
+      alumno_id: alumnoActivo.id,
+      rutina_id: rutinaActiva.id,
+      dia: diaActivo,
+      orden: ejerciciosActivos.length,
+      ...payload,
+    });
+  }
   closeModal("modal-ejercicio");
   await loadEjercicios();
 }
