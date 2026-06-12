@@ -329,9 +329,13 @@ function copyLink(url, btn) {
 }
 
 function irAEditar(id) {
-  document.querySelectorAll(".nav-item")[1].click();
-  document.getElementById("select-alumno-rutina").value = id;
-  onAlumnoRutinaChange();
+  try {
+    document.querySelectorAll(".nav-item")[1].click();
+    document.getElementById("select-alumno-rutina").value = id;
+    onAlumnoRutinaChange();
+  } catch(e) {
+    alert("Error en irAEditar: " + e.message);
+  }
 }
 
 // ── MODAL ALUMNO ──────────────────────────────────────────────
@@ -374,25 +378,34 @@ async function eliminarAlumno(id) {
 
 // ── VERSIONES DE RUTINA ───────────────────────────────────────
 async function onAlumnoRutinaChange() {
-  const id = document.getElementById("select-alumno-rutina").value;
-  if (!id) return;
-  alumnoActivo = alumnos.find(a => a.id === id);
-  document.getElementById("rutina-title").innerText = alumnoActivo.nombre;
-  document.getElementById("select-dias").value = alumnoActivo.dias_semana;
-  await loadRutinasAlumno();
+  try {
+    const id = document.getElementById("select-alumno-rutina").value;
+    if (!id) return;
+    alumnoActivo = alumnos.find(a => a.id === id);
+    document.getElementById("rutina-title").innerText = alumnoActivo.nombre;
+    document.getElementById("select-dias").value = alumnoActivo.dias_semana;
+    await loadRutinasAlumno();
+  } catch(e) {
+    alert("Error en onAlumnoRutinaChange: " + e.message);
+  }
 }
 
 async function loadRutinasAlumno() {
-  const { data } = await db.from("rutinas")
-    .select("*").eq("alumno_id", alumnoActivo.id).order("created_at", { ascending: false });
-  rutinasAlumno = data || [];
-  rutinaActiva  = rutinasAlumno.find(r => r.activa) || rutinasAlumno[0];
-  document.getElementById("rutina-sub").innerText = rutinaActiva ? `Rutina activa: ${rutinaActiva.nombre}` : "Sin rutina";
-  document.getElementById("rutinas-versions").style.display = "block";
-  renderRutinasVersiones();
-  diaActivo = 1;
-  renderDiasTabs();
-  await loadEjercicios();
+  try {
+    const { data, error } = await db.from("rutinas")
+      .select("*").eq("alumno_id", alumnoActivo.id).order("created_at", { ascending: false });
+    if (error) { alert("Error cargando rutinas: " + error.message); return; }
+    rutinasAlumno = data || [];
+    rutinaActiva  = rutinasAlumno.find(r => r.activa) || rutinasAlumno[0];
+    document.getElementById("rutina-sub").innerText = rutinaActiva ? `Rutina activa: ${rutinaActiva.nombre}` : "Sin rutina";
+    document.getElementById("rutinas-versions").style.display = "block";
+    renderRutinasVersiones();
+    diaActivo = 1;
+    renderDiasTabs();
+    await loadEjercicios();
+  } catch(e) {
+    alert("Error en loadRutinasAlumno: " + e.message);
+  }
 }
 
 function renderRutinasVersiones() {
